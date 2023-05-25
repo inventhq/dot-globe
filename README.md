@@ -22,6 +22,7 @@ https://github.com/inventhq/dot-globe/assets/69051988/63a86a5a-8994-4b4d-ae23-8a
 
 ```swift
 import UIKit
+import DotGlobe
 
 class ViewController: UIViewController {
     override func viewDidLoad() {
@@ -49,3 +50,16 @@ Customization:
 - glowColor: Sets the color of the earth's glow effect.
 - reflectionColor: Sets the color of the earth's reflection effect.
 - glowShininess: Adjusts the shininess of the earth's glow effect.
+
+## SwiftUI 
+
+```swift
+import SwiftUI
+import DotGlobe
+
+struct ContentView: View {
+    var body: some View {
+        GlobeView()
+    }
+}
+```
