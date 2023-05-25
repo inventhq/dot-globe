@@ -19,7 +19,7 @@ public class GlobeViewController: UIViewController {
         return image
     }
 
-    public var earthRadius: Double = 0.01 {
+    public var earthRadius: Double = 1.0 {
         didSet {
             if let earthNode = earthNode {
                 earthNode.removeFromParentNode()
@@ -27,8 +27,9 @@ public class GlobeViewController: UIViewController {
             }
         }
     }
+   
     
-    public var dotSize: CGFloat = 0 {
+    public var dotSize: CGFloat = 0.005 {
         didSet {
             if dotSize != oldValue {
                 setupDotGeometry()
@@ -58,10 +59,7 @@ public class GlobeViewController: UIViewController {
     public var background: UIColor? {
         didSet {
             if let background = background {
-                let gradientLayer = CAGradientLayer()
-                gradientLayer.frame = view.bounds
-                gradientLayer.colors = [background.cgColor, UIColor.black.cgColor]
-                view.layer.insertSublayer(gradientLayer, at: 0)
+                view.backgroundColor = background
             }
         }
     }
@@ -108,9 +106,16 @@ public class GlobeViewController: UIViewController {
         }
     }
 
+    private var dotCount = 12500
     
     public init(earthRadius: Double) {
         self.earthRadius = earthRadius
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    public init(earthRadius: Double, dotCount: Int) {
+        self.earthRadius = earthRadius
+        self.dotCount = dotCount
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -223,7 +228,6 @@ public class GlobeViewController: UIViewController {
     }
 
     private func generateTextureMap(radius: CGFloat, completion: ([(position: SCNVector3, x: Int, y: Int)]) -> ()) {
-        let dotCount = 12500
         var textureMap = [(position: SCNVector3, x: Int, y: Int)]()
          
 
