@@ -11,7 +11,8 @@ A SceneKit and Metal Powered interactive globe for UIKit and SwiftUI
 - Works with SwiftUI.
 
 ## TODOs:
-- Add animation and interaction with the globe
+- Add animation and interaction with the globe -- Working on
+- Add country grouping and add necessary methods to SwiftUI and UIKit
 
 # Showroom
 https://github.com/inventhq/dot-globe/assets/69051988/63a86a5a-8994-4b4d-ae23-8aba5ec9777a
