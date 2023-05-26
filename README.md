@@ -64,3 +64,5 @@ struct ContentView: View {
     }
 }
 ```
+
+You can use all the parameters above to customize the globe. Because of the performance issues, you have to specify everything before dots and globe gets rendered, or dot cloud causes a massive rendering issue.
