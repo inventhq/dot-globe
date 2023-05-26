@@ -41,7 +41,7 @@ class ViewController: UIViewController {
 Customization:
 - dotCount: Amounts of dots used to draw the earth map, adjust it for your needs
 - earthRadius: Adjusts the radius of the earth in the globe.
-- dotSize: Sets the size of the dots displayed on the globe, by default, it is (0.005 / 1.0).
+- dotSize: Sets the size of the dots displayed on the globe, by default, it is 0.005.
 - enablesParticles: Enables or disables particle effects, by default, background is starry.
 - particles: Sets the particle system for the globe's background.
 - background
