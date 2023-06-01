@@ -148,17 +148,13 @@ public class GlobeViewController: UIViewController {
         sceneView.allowsCameraControl = true
         
         self.view.addSubview(sceneView)
-        
-        
     }
-    
     
     private func setupParticles() {
         guard let stars = SCNParticleSystem(named: "StarsParticles.scnp", inDirectory: nil) else { return }
         stars.isLightingEnabled = false
         sceneView.scene?.rootNode.addParticleSystem(stars)
     }
-    
     
     private func setupBackground(color: UIColor) {
         let gradientLayer = CAGradientLayer()
@@ -185,6 +181,8 @@ public class GlobeViewController: UIViewController {
     private func setupDotGeometry() {
         self.generateTextureMap(radius: CGFloat(earthRadius)) { textureMap in
             let dotColor = UIColor(white: 1, alpha: 0.6)
+
+            // threshold to determine if the pixel in the earth-dark.jpg represents terrain (0.03 represents rgb(7.65,7.65,7.65), which is almost black)
             let threshold: CGFloat = 0.03
             
             let dotGeometry = SCNSphere(radius: dotRadius)
