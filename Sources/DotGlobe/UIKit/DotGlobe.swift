@@ -9,6 +9,13 @@ import Foundation
 import SceneKit
 import CoreImage
 
+func printTimeElapsedWhenRunningCode(title:String, operation:()->()) {
+    let startTime = CFAbsoluteTimeGetCurrent()
+    operation()
+    let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+    print("Time elapsed for \(title): \(timeElapsed) s.")
+}
+
 public class GlobeViewController: UIViewController {
     public var earthNode: SCNNode! = nil
     private var sceneView : SCNView! = nil
