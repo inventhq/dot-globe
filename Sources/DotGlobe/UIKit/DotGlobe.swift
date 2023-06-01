@@ -203,7 +203,7 @@ public class GlobeViewController: UIViewController {
     private func setupDotGeometry() {
         self.generateTextureMap(radius: CGFloat(earthRadius)) { textureMap in
             printTimeElapsedWhenRunningCode(title: "setuppingDotGeometry") {
-                let dotColor = UIColor(white: 1, alpha: 0.6)
+                let dotColor = UIColor(white: 1, alpha: 1)
 
                 // threshold to determine if the pixel in the earth-dark.jpg represents terrain (0.03 represents rgb(7.65,7.65,7.65), which is almost black)
                 let threshold: CGFloat = 0.03
@@ -218,7 +218,7 @@ public class GlobeViewController: UIViewController {
 
                 printTimeElapsedWhenRunningCode(title: "setuppingDotGeometry: concurrent perform") {
                     //DispatchQueue.concurrentPerform(iterations: textureMap.count - 5) { i in
-                    for i in 0...textureMap.count - 5 {
+                    for i in 0...textureMap.count - 1 {
                         let u = textureMap[i].x
                         let v = textureMap[i].y
 
@@ -233,8 +233,8 @@ public class GlobeViewController: UIViewController {
                     }
                 }
 
-                printTimeElapsedWhenRunningCode(title: "setuppingDotGeometry: DispatchQueue.main.async ") {
-                    DispatchQueue.main.async {
+                DispatchQueue.main.async {
+                    printTimeElapsedWhenRunningCode(title: "DispatchQueue.main.async ") {
                         let dotPositions = positions as NSArray
                         let dotIndices = NSArray()
                         let source = SCNGeometrySource(vertices: dotPositions as! [SCNVector3])
@@ -255,30 +255,37 @@ public class GlobeViewController: UIViewController {
     }
 
     private func generateTextureMap(radius: CGFloat, completion: ([(position: SCNVector3, x: Int, y: Int)]) -> ()) {
-        var textureMap = [(position: SCNVector3, x: Int, y: Int)]()
-        textureMap.reserveCapacity(dotCount)
-        let doubleDotCount = Double(dotCount)
-        DispatchQueue.concurrentPerform(iterations: dotCount) { i in
-            let phi = acos(-1 + (2 * Double(i)) / doubleDotCount)
-            let theta = sqrt(Double(dotCount) * Double.pi) * phi
-
-            let x = sin(phi) * cos(theta)
-            let y = sin(phi) * sin(theta)
-            let z = cos(phi)
-
-            let u = CGFloat(theta) / (2 * CGFloat.pi)
-            let v = CGFloat(phi) / CGFloat.pi
-
-            if u.isNaN || v.isNaN {
-                return
+        printTimeElapsedWhenRunningCode(title: "generateTextureMap") {
+            var textureMap = [(position: SCNVector3, x: Int, y: Int)]()
+            printTimeElapsedWhenRunningCode(title: "reserveCapacity") {
+                textureMap.reserveCapacity(dotCount)
             }
+            let doubleDotCount = Double(dotCount)
+            let floatWorldMapImageHeight = CGFloat(worldMapImage.height)
+            let floatWorldMapImageWidth = CGFloat(worldMapImage.width)
+            for i in 0...dotCount {
+            //DispatchQueue.concurrentPerform(iterations: dotCount) { i in
+                let phi = acos(-1 + (2 * Double(i)) / doubleDotCount)
+                let theta = sqrt(doubleDotCount * Double.pi) * phi
 
-            let xPixel = Int(u) * worldMapImage.width
-            let yPixel = Int(v) * worldMapImage.height
+                let x = sin(phi) * cos(theta)
+                let y = sin(phi) * sin(theta)
+                let z = cos(phi)
 
-            textureMap.append((position: SCNVector3(x: Float(x) * Float(radius), y: Float(y) * Float(radius), z: Float(z) * Float(radius)), x: xPixel, y: yPixel))
+                let u = CGFloat(theta) / (2 * CGFloat.pi)
+                let v = CGFloat(phi) / CGFloat.pi
+
+                if u.isNaN || v.isNaN {
+                    return
+                }
+
+                let xPixel = Int(u * floatWorldMapImageWidth)
+                let yPixel = Int(v * floatWorldMapImageHeight)
+
+                textureMap.append((position: SCNVector3(x: Float(x) * Float(radius), y: Float(y) * Float(radius), z: Float(z) * Float(radius)), x: xPixel, y: yPixel))
+            }
+            completion(textureMap)
         }
-        completion(textureMap)
     }
 
     private func getPixelColor(x: Int, y: Int) -> (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) {
