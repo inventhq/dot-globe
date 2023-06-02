@@ -17,17 +17,18 @@ func printTimeElapsedWhenRunningCode(title:String, operation:()->()) {
 }
 
 public class GlobeViewController: UIViewController {
-    public var earthNode: SCNNode! = nil
-    private var sceneView : SCNView! = nil
-    private var cameraNode: SCNNode! = nil
+    public var earthNode: SCNNode!
+    private var sceneView : SCNView!
+    private var cameraNode: SCNNode!
     private var worldMapImage : CGImage {
-        guard let path = Bundle.module.path(forResource: "earth-dark", ofType: "jpg") else { fatalError() }
+        guard let path = Bundle.module.path(forResource: "earth-dark", ofType: "jpg") else { fatalError("Could not locate world map image.") }
         guard let image = UIImage(contentsOfFile: path)?.cgImage else { fatalError() }
         return image
     }
 
     private lazy var imgData: CFData = {
-        return worldMapImage.dataProvider!.data!
+        guard let imgData = worldMapImage.dataProvider?.data else { fatalError("Could not fetch data from world map image.") }
+        return imgData
     }()
 
     private lazy var worldMapWidth: Int = {
@@ -101,7 +102,6 @@ public class GlobeViewController: UIViewController {
             }
         }
     }
-
 
     public var glowShininess: CGFloat = 1.0 {
         didSet {
@@ -216,8 +216,7 @@ public class GlobeViewController: UIViewController {
                 var positions = [SCNVector3]()
                 var dotNodes = [SCNNode]()
 
-                printTimeElapsedWhenRunningCode(title: "setuppingDotGeometry: concurrent perform") {
-                    //DispatchQueue.concurrentPerform(iterations: textureMap.count - 5) { i in
+                printTimeElapsedWhenRunningCode(title: "setuppingDotGeometry: preparing positions") {
                     for i in 0...textureMap.count - 1 {
                         let u = textureMap[i].x
                         let v = textureMap[i].y
@@ -234,7 +233,7 @@ public class GlobeViewController: UIViewController {
                 }
 
                 DispatchQueue.main.async {
-                    printTimeElapsedWhenRunningCode(title: "DispatchQueue.main.async ") {
+                    printTimeElapsedWhenRunningCode(title: "setuppingDotGeometry: constructing vectors") {
                         let dotPositions = positions as NSArray
                         let dotIndices = NSArray()
                         let source = SCNGeometrySource(vertices: dotPositions as! [SCNVector3])
@@ -264,7 +263,6 @@ public class GlobeViewController: UIViewController {
             let floatWorldMapImageHeight = CGFloat(worldMapImage.height)
             let floatWorldMapImageWidth = CGFloat(worldMapImage.width)
             for i in 0...dotCount {
-            //DispatchQueue.concurrentPerform(iterations: dotCount) { i in
                 let phi = acos(-1 + (2 * Double(i)) / doubleDotCount)
                 let theta = sqrt(doubleDotCount * Double.pi) * phi
 
@@ -293,9 +291,9 @@ public class GlobeViewController: UIViewController {
         let pixelInfo: Int = ((worldMapWidth * y) + x) * 4
 
         let r = CGFloat(data[pixelInfo]) / CGFloat(255.0)
-        let g = CGFloat(data[pixelInfo+1]) / CGFloat(255.0)
-        let b = CGFloat(data[pixelInfo+2]) / CGFloat(255.0)
-        let a = CGFloat(data[pixelInfo+3]) / CGFloat(255.0)
+        let g = CGFloat(data[pixelInfo + 1]) / CGFloat(255.0)
+        let b = CGFloat(data[pixelInfo + 2]) / CGFloat(255.0)
+        let a = CGFloat(data[pixelInfo + 3]) / CGFloat(255.0)
 
         return (r, g, b, a)
     }
