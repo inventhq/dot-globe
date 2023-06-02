@@ -9,13 +9,6 @@ import Foundation
 import SceneKit
 import CoreImage
 
-func printTimeElapsedWhenRunningCode(title:String, operation:()->()) {
-    let startTime = CFAbsoluteTimeGetCurrent()
-    operation()
-    let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-    print("Time elapsed for \(title): \(timeElapsed) s.")
-}
-
 public class GlobeViewController: UIViewController {
     public var earthNode: SCNNode!
     private var sceneView : SCNView!
@@ -43,7 +36,8 @@ public class GlobeViewController: UIViewController {
             }
         }
     }
-
+   
+    
     public var dotSize: CGFloat = 0.005 {
         didSet {
             if dotSize != oldValue {
@@ -51,7 +45,7 @@ public class GlobeViewController: UIViewController {
             }
         }
     }
-
+    
     public var enablesParticles: Bool = true {
         didSet {
             if enablesParticles {
@@ -61,7 +55,7 @@ public class GlobeViewController: UIViewController {
             }
         }
     }
-
+    
     public var particles: SCNParticleSystem? {
         didSet {
             if let particles = particles {
@@ -70,7 +64,7 @@ public class GlobeViewController: UIViewController {
             }
         }
     }
-
+    
     public var background: UIColor? {
         didSet {
             if let background = background {
@@ -78,7 +72,7 @@ public class GlobeViewController: UIViewController {
             }
         }
     }
-
+    
     public var earthColor: UIColor = .earthColor {
         didSet {
             if let earthNode = earthNode {
@@ -86,7 +80,7 @@ public class GlobeViewController: UIViewController {
             }
         }
     }
-
+    
     public var glowColor: UIColor = .earthGlow {
         didSet {
             if let earthNode = earthNode {
@@ -94,7 +88,7 @@ public class GlobeViewController: UIViewController {
             }
         }
     }
-
+    
     public var reflectionColor: UIColor = .earthReflection {
         didSet {
             if let earthNode = earthNode {
@@ -113,7 +107,7 @@ public class GlobeViewController: UIViewController {
 
     private var dotRadius: CGFloat {
         if dotSize > 0 {
-            return dotSize
+             return dotSize
         }
         else {
             return 0.01 * CGFloat(earthRadius) / 1.0
@@ -121,85 +115,77 @@ public class GlobeViewController: UIViewController {
     }
 
     private var dotCount = 12500
-
+    
     public init(earthRadius: Double) {
         self.earthRadius = earthRadius
         super.init(nibName: nil, bundle: nil)
     }
-
+    
     public init(earthRadius: Double, dotCount: Int) {
         self.earthRadius = earthRadius
         self.dotCount = dotCount
         super.init(nibName: nil, bundle: nil)
     }
-
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     public override func viewDidLoad() {
         super.viewDidLoad()
         setupScene()
         if enablesParticles {
             setupParticles()
         }
-        printTimeElapsedWhenRunningCode(title: "setupCamera") {
-            setupCamera()
-        }
-        printTimeElapsedWhenRunningCode(title: "setupGlobe") {
-            setupGlobe()
-        }
-        printTimeElapsedWhenRunningCode(title: "setupDotGeometry") {
-            setupDotGeometry()
-        }
+        setupCamera()
+        setupGlobe()
+        setupDotGeometry()
         if let background = background {
             setupBackground(color: background)
         }
     }
-
+    
     private func setupScene() {
         let scene = SCNScene()
         sceneView = SCNView(frame: view.frame)
 
         sceneView.scene = scene
-
+        
         sceneView.showsStatistics = true
         sceneView.backgroundColor = .black
         sceneView.allowsCameraControl = true
-
+        
         self.view.addSubview(sceneView)
     }
-
+    
     private func setupParticles() {
         guard let stars = SCNParticleSystem(named: "StarsParticles.scnp", inDirectory: nil) else { return }
         stars.isLightingEnabled = false
         sceneView.scene?.rootNode.addParticleSystem(stars)
     }
-
+    
     private func setupBackground(color: UIColor) {
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = view.bounds
         gradientLayer.colors = [color.cgColor, UIColor.black.cgColor]
         view.layer.insertSublayer(gradientLayer, at: 0)
     }
-
+    
     private func setupCamera() {
         self.cameraNode = SCNNode()
-
+        
         cameraNode.camera = SCNCamera()
         cameraNode.position = SCNVector3(x: 0, y: 0, z: 5)
 
+        
         sceneView.scene?.rootNode.addChildNode(cameraNode)
     }
-
+    
     private func setupGlobe() {
-        self.earthNode = EarthNode(radius: earthRadius,
-                                   earthColor: earthColor,
-                                   earthGlow: glowColor,
-                                   earthReflection: reflectionColor)
+        self.earthNode = EarthNode(radius: earthRadius, earthColor: earthColor, earthGlow: glowColor, earthReflection: reflectionColor)
         sceneView.scene?.rootNode.addChildNode(earthNode)
     }
-
+    
     private func setupDotGeometry() {
         self.generateTextureMap(radius: CGFloat(earthRadius)) { textureMap in
             printTimeElapsedWhenRunningCode(title: "setuppingDotGeometry") {
@@ -249,6 +235,8 @@ public class GlobeViewController: UIViewController {
                         self.sceneView.scene?.rootNode.addChildNode(pointCloudNode)
                     }
                 }
+                
+                self.sceneView.scene?.rootNode.addChildNode(pointCloudNode)
             }
         }
     }
@@ -303,11 +291,11 @@ private extension UIColor {
     static var earthColor: UIColor {
         return UIColor(red: 0.227, green: 0.133, blue: 0.541, alpha: 1.0)
     }
-
+    
     static var earthGlow: UIColor {
         UIColor(red: 0.133, green: 0.0, blue: 0.22, alpha: 1.0)
     }
-
+    
     static var earthReflection: UIColor {
         UIColor(red: 0.227, green: 0.133, blue: 0.541, alpha: 1.0)
     }
