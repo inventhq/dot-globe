@@ -8,16 +8,22 @@
 import SwiftUI
 import SceneKit
 
+#if os(iOS)
+typealias GenericControllerRepresentable = UIViewControllerRepresentable
+#else
+typealias GenericControllerRepresentable = NSViewControllerRepresentable
+#endif
+
 @available(iOS 13.0, *)
-private struct GlobeViewControllerRepresentable: UIViewControllerRepresentable {
+private struct GlobeViewControllerRepresentable: GenericControllerRepresentable {
     var dotCount: Int?
     var earthRadius: Double?
     var dotSize: Float?
     var enablesParticles: Bool?
     var particles: SCNParticleSystem?
-    var earthColor: UIColor?
-    var glowColor: UIColor?
-    var reflectionColor: UIColor?
+    var earthColor: Color?
+    var glowColor: Color?
+    var reflectionColor: Color?
     var glowShininess: CGFloat?
     
     public init(
@@ -26,9 +32,9 @@ private struct GlobeViewControllerRepresentable: UIViewControllerRepresentable {
         dotSize: Float? = nil,
         enablesParticles: Bool? = nil,
         particles: SCNParticleSystem? = nil,
-        earthColor: UIColor? = nil,
-        glowColor: UIColor? = nil,
-        reflectionColor: UIColor? = nil,
+        earthColor: Color? = nil,
+        glowColor: Color? = nil,
+        reflectionColor: Color? = nil,
         glowShininess: CGFloat? = nil
     ) {
         self.dotCount = dotCount
@@ -46,6 +52,7 @@ private struct GlobeViewControllerRepresentable: UIViewControllerRepresentable {
         
     }
     
+    #if os(iOS)
     func makeUIViewController(context: Context) -> GlobeViewController {
         let globeController = GlobeViewController(earthRadius: earthRadius ?? 1, dotCount: dotCount ?? 12500)
         updateGlobeController(globeController)
@@ -55,6 +62,17 @@ private struct GlobeViewControllerRepresentable: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: GlobeViewController, context: Context) {
         updateGlobeController(uiViewController)
     }
+    #else
+    func makeNSViewController(context: Context) -> GlobeViewController {
+        let globeController = GlobeViewController(earthRadius: earthRadius ?? 1, dotCount: dotCount ?? 12500)
+        updateGlobeController(globeController)
+        return globeController
+    }
+    
+    func updateNSViewController(_ nsViewController: GlobeViewController, context: Context) {
+        updateGlobeController(nsViewController)
+    }
+    #endif
     
     private func updateGlobeController(_ globeController: GlobeViewController) {
         if let dotSize = dotSize {
@@ -88,9 +106,9 @@ public struct GlobeView: View {
     public var dotSize: Float?
     public var enablesParticles: Bool?
     public var particles: SCNParticleSystem?
-    public var earthColor: UIColor?
-    public var glowColor: UIColor?
-    public var reflectionColor: UIColor?
+    public var earthColor: Color?// = Color(red: 0.0, green: 0.482, blue: 0.871)
+    public var glowColor: Color?// = Color(red: 0.0, green: 0.22, blue: 0.482)
+    public var reflectionColor: Color?// = Color(red: 0.0, green: 0.482, blue: 0.871)
     public var glowShininess: CGFloat?
     
     public init() {
