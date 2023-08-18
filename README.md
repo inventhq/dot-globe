@@ -9,6 +9,7 @@ A SceneKit and Metal Powered interactive globe for UIKit and SwiftUI
 - Control the radius of the earth and size of the dots on the globe.
 - Enable/disable particle effects, such as stars.
 - Works with SwiftUI.
+- Works with iOS, MacOS, iPadOS, and even with WatchOS!
 
 ## TODOs:
 - Add animation and interaction with the globe -- Working on
