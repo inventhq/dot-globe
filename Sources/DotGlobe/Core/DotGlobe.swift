@@ -8,14 +8,38 @@
 import Foundation
 import SceneKit
 import CoreImage
+import SwiftUI
 
-public class GlobeViewController: UIViewController {
+#if os(iOS)
+public typealias GenericController = UIViewController
+public typealias GenericColor = UIColor
+public typealias GenericImage = UIImage
+#else
+public typealias GenericController = NSViewController
+public typealias GenericColor = NSColor
+public typealias GenericImage = NSImage
+extension NSImage {
+    var cgImage: CGImage? {
+        var proposedRect = CGRect(origin: .zero, size: size)
+
+        return cgImage(forProposedRect: &proposedRect,
+                       context: nil,
+                       hints: nil)
+    }
+
+    convenience init?(named name: String) {
+        self.init(named: Name(name))
+    }
+}
+#endif
+
+public class GlobeViewController: GenericController {
     public var earthNode: SCNNode!
     private var sceneView : SCNView!
     private var cameraNode: SCNNode!
     private var worldMapImage : CGImage {
-        guard let path = Bundle.module.path(forResource: "earth-dark", ofType: "jpg") else { fatalError("Could not locate world map image.") }
-        guard let image = UIImage(contentsOfFile: path)?.cgImage else { fatalError() }
+        guard let path = Bundle.main.path(forResource: "earth-dark", ofType: "jpg") else { fatalError("Could not locate world map image.") }
+        guard let image = GenericImage(contentsOfFile: path)?.cgImage else { fatalError() }
         return image
     }
 
@@ -65,15 +89,19 @@ public class GlobeViewController: UIViewController {
         }
     }
     
-    public var background: UIColor? {
+    public var background: Color? {
         didSet {
             if let background = background {
-                view.backgroundColor = background
+                #if os(iOS)
+                view.backgroundColor = GenericColor(background)
+                #else
+                view.layer?.backgroundColor = GenericColor(background).cgColor
+                #endif
             }
         }
     }
     
-    public var earthColor: UIColor = .earthColor {
+    public var earthColor: Color = .earthColor {
         didSet {
             if let earthNode = earthNode {
                 earthNode.geometry?.firstMaterial?.diffuse.contents = earthColor
@@ -81,7 +109,7 @@ public class GlobeViewController: UIViewController {
         }
     }
     
-    public var glowColor: UIColor = .earthGlow {
+    public var glowColor: Color = .earthGlow {
         didSet {
             if let earthNode = earthNode {
                 earthNode.geometry?.firstMaterial?.emission.contents = glowColor
@@ -89,7 +117,7 @@ public class GlobeViewController: UIViewController {
         }
     }
     
-    public var reflectionColor: UIColor = .earthReflection {
+    public var reflectionColor: Color = .earthReflection {
         didSet {
             if let earthNode = earthNode {
                 earthNode.geometry?.firstMaterial?.emission.contents = glowColor
@@ -127,10 +155,31 @@ public class GlobeViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
     }
     
+    #if os(macOS)
+    override public func loadView() {
+        self.view = .init()
+    }
+    #endif
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
+    #if os(macOS)
+    public override func viewDidAppear() {
+        super.viewDidAppear()
+        setupScene()
+        if enablesParticles {
+            setupParticles()
+        }
+        setupCamera()
+        setupGlobe()
+        setupDotGeometry()
+        if let background = background {
+            setupBackground(color: GenericColor(background))
+        }
+    }
+    #else
     public override func viewDidLoad() {
         super.viewDidLoad()
         setupScene()
@@ -141,9 +190,10 @@ public class GlobeViewController: UIViewController {
         setupGlobe()
         setupDotGeometry()
         if let background = background {
-            setupBackground(color: background)
+            setupBackground(color: GenericColor(background))
         }
     }
+    #endif
     
     private func setupScene() {
         let scene = SCNScene()
@@ -164,11 +214,17 @@ public class GlobeViewController: UIViewController {
         sceneView.scene?.rootNode.addParticleSystem(stars)
     }
     
-    private func setupBackground(color: UIColor) {
+    private func setupBackground(color: GenericColor) {
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = view.bounds
-        gradientLayer.colors = [color.cgColor, UIColor.black.cgColor]
+        gradientLayer.colors = [color.cgColor, GenericColor.black.cgColor]
+        
+        #if os(iOS)
         view.layer.insertSublayer(gradientLayer, at: 0)
+        #else
+        view.layer?.insertSublayer(gradientLayer, at: 0)
+        #endif
+        
     }
     
     private func setupCamera() {
@@ -188,90 +244,82 @@ public class GlobeViewController: UIViewController {
     
     private func setupDotGeometry() {
         self.generateTextureMap(radius: CGFloat(earthRadius)) { textureMap in
-            printTimeElapsedWhenRunningCode(title: "setuppingDotGeometry") {
-                let dotColor = UIColor(white: 1, alpha: 1)
+            let dotColor = GenericColor(white: 1, alpha: 1)
 
-                // threshold to determine if the pixel in the earth-dark.jpg represents terrain (0.03 represents rgb(7.65,7.65,7.65), which is almost black)
-                let threshold: CGFloat = 0.03
+            // threshold to determine if the pixel in the earth-dark.jpg represents terrain (0.03 represents rgb(7.65,7.65,7.65), which is almost black)
+            let threshold: CGFloat = 0.03
 
-                let dotGeometry = SCNSphere(radius: dotRadius)
+            let dotGeometry = SCNSphere(radius: dotRadius)
 
-                dotGeometry.firstMaterial?.diffuse.contents = dotColor
-                dotGeometry.firstMaterial?.lightingModel = SCNMaterial.LightingModel.constant
+            dotGeometry.firstMaterial?.diffuse.contents = dotColor
+            dotGeometry.firstMaterial?.lightingModel = SCNMaterial.LightingModel.constant
 
-                var positions = [SCNVector3]()
-                var dotNodes = [SCNNode]()
+            var positions = [SCNVector3]()
+            var dotNodes = [SCNNode]()
 
-                printTimeElapsedWhenRunningCode(title: "setuppingDotGeometry: preparing positions") {
-                    for i in 0...textureMap.count - 1 {
-                        let u = textureMap[i].x
-                        let v = textureMap[i].y
+            for i in 0...textureMap.count - 1 {
+                let u = textureMap[i].x
+                let v = textureMap[i].y
 
-                        let pixelColor = self.getPixelColor(x: Int(u), y: Int(v))
+                let pixelColor = self.getPixelColor(x: Int(u), y: Int(v))
 
-                        if pixelColor.red < threshold && pixelColor.green < threshold && pixelColor.blue < threshold {
-                            let dotNode = SCNNode(geometry: dotGeometry)
-                            dotNode.position = textureMap[i].position
-                            positions.append(dotNode.position)
-                            dotNodes.append(dotNode)
-                        }
-                    }
+                if pixelColor.red < threshold && pixelColor.green < threshold && pixelColor.blue < threshold {
+                    let dotNode = SCNNode(geometry: dotGeometry)
+                    dotNode.position = textureMap[i].position
+                    positions.append(dotNode.position)
+                    dotNodes.append(dotNode)
+                }
+            }
+
+            DispatchQueue.main.async {
+                let dotPositions = positions as NSArray
+                let dotIndices = NSArray()
+                let source = SCNGeometrySource(vertices: dotPositions as! [SCNVector3])
+                let element = SCNGeometryElement(indices: dotIndices as! [Int32], primitiveType: .point)
+
+                let pointCloud = SCNGeometry(sources: [source], elements: [element])
+
+                let pointCloudNode = SCNNode(geometry: pointCloud)
+                for dotNode in dotNodes {
+                    pointCloudNode.addChildNode(dotNode)
                 }
 
-                DispatchQueue.main.async {
-                    printTimeElapsedWhenRunningCode(title: "setuppingDotGeometry: constructing vectors") {
-                        let dotPositions = positions as NSArray
-                        let dotIndices = NSArray()
-                        let source = SCNGeometrySource(vertices: dotPositions as! [SCNVector3])
-                        let element = SCNGeometryElement(indices: dotIndices as! [Int32], primitiveType: .point)
-
-                        let pointCloud = SCNGeometry(sources: [source], elements: [element])
-
-                        let pointCloudNode = SCNNode(geometry: pointCloud)
-                        for dotNode in dotNodes {
-                            pointCloudNode.addChildNode(dotNode)
-                        }
-
-                        self.sceneView.scene?.rootNode.addChildNode(pointCloudNode)
-                    }
-                }
-                
                 self.sceneView.scene?.rootNode.addChildNode(pointCloudNode)
             }
         }
     }
 
     private func generateTextureMap(radius: CGFloat, completion: ([(position: SCNVector3, x: Int, y: Int)]) -> ()) {
-        printTimeElapsedWhenRunningCode(title: "generateTextureMap") {
-            var textureMap = [(position: SCNVector3, x: Int, y: Int)]()
-            printTimeElapsedWhenRunningCode(title: "reserveCapacity") {
-                textureMap.reserveCapacity(dotCount)
+        var textureMap = [(position: SCNVector3, x: Int, y: Int)]()
+        textureMap.reserveCapacity(dotCount)
+        let doubleDotCount = Double(dotCount)
+        let floatWorldMapImageHeight = CGFloat(worldMapImage.height)
+        let floatWorldMapImageWidth = CGFloat(worldMapImage.width)
+        for i in 0...dotCount {
+            let phi = acos(-1 + (2 * Double(i)) / doubleDotCount)
+            let theta = sqrt(doubleDotCount * Double.pi) * phi
+
+            let x = sin(phi) * cos(theta)
+            let y = sin(phi) * sin(theta)
+            let z = cos(phi)
+
+            let u = CGFloat(theta) / (2 * CGFloat.pi)
+            let v = CGFloat(phi) / CGFloat.pi
+
+            if u.isNaN || v.isNaN {
+                return
             }
-            let doubleDotCount = Double(dotCount)
-            let floatWorldMapImageHeight = CGFloat(worldMapImage.height)
-            let floatWorldMapImageWidth = CGFloat(worldMapImage.width)
-            for i in 0...dotCount {
-                let phi = acos(-1 + (2 * Double(i)) / doubleDotCount)
-                let theta = sqrt(doubleDotCount * Double.pi) * phi
 
-                let x = sin(phi) * cos(theta)
-                let y = sin(phi) * sin(theta)
-                let z = cos(phi)
+            let xPixel = Int(u * floatWorldMapImageWidth)
+            let yPixel = Int(v * floatWorldMapImageHeight)
 
-                let u = CGFloat(theta) / (2 * CGFloat.pi)
-                let v = CGFloat(phi) / CGFloat.pi
-
-                if u.isNaN || v.isNaN {
-                    return
-                }
-
-                let xPixel = Int(u * floatWorldMapImageWidth)
-                let yPixel = Int(v * floatWorldMapImageHeight)
-
-                textureMap.append((position: SCNVector3(x: Float(x) * Float(radius), y: Float(y) * Float(radius), z: Float(z) * Float(radius)), x: xPixel, y: yPixel))
-            }
-            completion(textureMap)
+            #if os(iOS)
+            textureMap.append((position: SCNVector3(x: Float(x) * Float(radius), y: Float(y) * Float(radius), z: Float(z) * Float(radius)), x: xPixel, y: yPixel))
+            #else
+            textureMap.append((position: SCNVector3(x: x * radius, y: y * radius, z: z * radius), x: xPixel, y: yPixel))
+            #endif
         }
+        completion(textureMap)
     }
 
     private func getPixelColor(x: Int, y: Int) -> (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) {
@@ -287,16 +335,16 @@ public class GlobeViewController: UIViewController {
     }
 }
 
-private extension UIColor {
-    static var earthColor: UIColor {
-        return UIColor(red: 0.227, green: 0.133, blue: 0.541, alpha: 1.0)
+private extension Color {
+    static var earthColor: Color {
+        return Color(red: 0.227, green: 0.133, blue: 0.541)
     }
     
-    static var earthGlow: UIColor {
-        UIColor(red: 0.133, green: 0.0, blue: 0.22, alpha: 1.0)
+    static var earthGlow: Color {
+        Color(red: 0.133, green: 0.0, blue: 0.22)
     }
     
-    static var earthReflection: UIColor {
-        UIColor(red: 0.227, green: 0.133, blue: 0.541, alpha: 1.0)
+    static var earthReflection: Color {
+        Color(red: 0.227, green: 0.133, blue: 0.541)
     }
 }

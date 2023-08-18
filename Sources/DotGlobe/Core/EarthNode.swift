@@ -7,16 +7,17 @@
 
 import Foundation
 import SceneKit
+import SwiftUI
 
 public class EarthNode: SCNNode {
-    public init(radius: CGFloat, earthColor: UIColor, earthGlow: UIColor, earthReflection: UIColor) {
+    public init(radius: CGFloat, earthColor: Color, earthGlow: Color, earthReflection: Color) {
         super.init()
         self.geometry = SCNSphere(radius: radius)
-        self.geometry?.firstMaterial?.diffuse.contents = earthColor
-        self.geometry?.firstMaterial?.emission.contents = earthGlow
+        self.geometry?.firstMaterial?.diffuse.contents = GenericColor(earthColor)
+        self.geometry?.firstMaterial?.emission.contents = GenericColor(earthGlow)
         self.geometry?.firstMaterial?.emission.intensity = 0.1
         self.geometry?.firstMaterial?.shininess = 0.7
-        self.geometry?.firstMaterial?.reflective.contents = earthReflection
+        self.geometry?.firstMaterial?.reflective.contents = GenericColor(earthReflection)
         self.geometry?.firstMaterial?.reflective.intensity = 1.0
         self.filters = addBloom()
         
