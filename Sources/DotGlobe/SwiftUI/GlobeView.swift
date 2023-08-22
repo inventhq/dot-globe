@@ -101,31 +101,53 @@ private struct GlobeViewControllerRepresentable: GenericControllerRepresentable 
 
 @available(iOS 13.0, *)
 public struct GlobeView: View {
-    public var dotCount: Int?
-    public var earthRadius: Double?
-    public var dotSize: Float?
-    public var enablesParticles: Bool?
-    public var particles: SCNParticleSystem?
-    public var earthColor: Color?// = Color(red: 0.0, green: 0.482, blue: 0.871)
-    public var glowColor: Color?// = Color(red: 0.0, green: 0.22, blue: 0.482)
-    public var reflectionColor: Color?// = Color(red: 0.0, green: 0.482, blue: 0.871)
-    public var glowShininess: CGFloat?
+  public var dotCount: Int?
+  public var earthRadius: Double?
+  public var dotSize: Float?
+  public var enablesParticles: Bool?
+  public var particles: SCNParticleSystem?
+  public var earthColor: Color?// = Color(red: 0.0, green: 0.482, blue: 0.871)
+  public var glowColor: Color?// = Color(red: 0.0, green: 0.22, blue: 0.482)
+  public var reflectionColor: Color?// = Color(red: 0.0, green: 0.482, blue: 0.871)
+  public var glowShininess: CGFloat?
+  
+  public init() {
     
-    public init() {
-        
-    }
-    
-    public var body: some View {
-        GlobeViewControllerRepresentable(
-            dotCount: dotCount,
-            earthRadius: earthRadius,
-            dotSize: dotSize,
-            enablesParticles: enablesParticles,
-            particles: particles,
-            earthColor: earthColor,
-            glowColor: glowColor,
-            reflectionColor: reflectionColor,
-            glowShininess: glowShininess
-        )
-    }
+  }
+  
+  public init(
+    dotCount: Int? = nil,
+    earthRadius: Double? = nil,
+    dotSize: Float? = nil,
+    enablesParticles: Bool? = nil,
+    particles: SCNParticleSystem? = nil,
+    earthColor: Color? = nil,
+    glowColor: Color? = nil,
+    reflectionColor: Color? = nil,
+    glowShininess: CGFloat? = nil
+  ) {
+    self.dotCount = dotCount
+    self.earthRadius = earthRadius
+    self.dotSize = dotSize
+    self.enablesParticles = enablesParticles
+    self.particles = particles
+    self.earthColor = earthColor
+    self.glowColor = glowColor
+    self.reflectionColor = reflectionColor
+    self.glowShininess = glowShininess
+  }
+  
+  public var body: some View {
+    GlobeViewControllerRepresentable(
+      dotCount: dotCount,
+      earthRadius: earthRadius,
+      dotSize: dotSize,
+      enablesParticles: enablesParticles,
+      particles: particles,
+      earthColor: earthColor,
+      glowColor: glowColor,
+      reflectionColor: reflectionColor,
+      glowShininess: glowShininess
+    )
+  }
 }
