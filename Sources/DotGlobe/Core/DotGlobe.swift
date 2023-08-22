@@ -38,7 +38,7 @@ public class GlobeViewController: GenericController {
     private var sceneView : SCNView!
     private var cameraNode: SCNNode!
     private var worldMapImage : CGImage {
-        guard let path = Bundle.main.path(forResource: "earth-dark", ofType: "jpg") else { fatalError("Could not locate world map image.") }
+        guard let path = Bundle.module.path(forResource: "earth-dark", ofType: "jpg") else { fatalError("Could not locate world map image.") }
         guard let image = GenericImage(contentsOfFile: path)?.cgImage else { fatalError() }
         return image
     }
